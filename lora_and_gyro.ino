@@ -1,10 +1,37 @@
+//Importamos las librerias
 #include <Wire.h>
+#include <SPI.h>
+#include <LoRa.h>
 #include <LSM6.h>
 #include <LIS3MDL.h>
 #include <LPS.h>
-#include <SPI.h>
-#include <LoRa.h>
 
+//Librerias para la OLED
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+//Definimos los pines del modulo LoRa
+#define SCK 5
+#define MISO 19
+#define MOSI 27
+#define SS 18
+#define RST 14
+#define DIO0 26
+
+//Definimos la banda de LoRa
+#define BANDA 866E6
+
+//Definimos los pines de la OLED
+#define OLED_SDA 4
+#define OLED_SCL 15 
+#define OLED_RST 16
+
+//Definimos el display de la OLED
+#define ANCHO_PANTALLA 128
+#define ALTO_PANTALLA 64
+
+//Contador de paquetes
+int contador = 0;
 
 LSM6 ag;
 LIS3MDL mag;
@@ -13,8 +40,6 @@ LPS pta;
 float pressure;
 float temperature;
 float altitude;
-char report[255];
-const int DELAY = 1000;
 
 void ag_init() {
   if (!ag.init()) {
@@ -43,24 +68,32 @@ void pta_init() {
 }
 
 
-void lora_init() {
-  if (!LoRa.begin(868E6)) {
-    Serial.println("Starting LoRa failed!");
-    while (1);
-  }  
-}
-
 void setup() {
+
+
+  //Imprimimos mensaje de inicio en la OLED
   Serial.begin(9600);
-  Serial.println("iniciando");
+  Serial.println("iniciando...");
 
   Wire.begin();
   ag_init();
   mag_init();
   pta_init();
-  lora_init();
-}
 
+  //Pines SPI de LoRa
+  SPI.begin(SCK, MISO, MOSI, SS);
+  //Pines LoRa
+  LoRa.setPins(SS, RST, DIO0);
+
+  //Iniciamos LoRa
+  if (!LoRa.begin(BANDA)) {
+    Serial.println("Error al inicial LoRa!");
+    while (1);
+  }
+  Serial.println("LoRa iniciada correctamente!");
+  delay(2000);
+  
+}
 
 void ag_read() {
   ag.read();
@@ -77,17 +110,10 @@ void pta_read() {
   altitude = pta.pressureToAltitudeMeters(pressure);
 }
 
-
-void lora_send() {
-  LoRa.beginPacket();
-  LoRa.print(report);
-  LoRa.endPacket();
-  Serial.println(report);
-}
-
-char* altimu10() {
+String altimu10() {
   const char floatsize = 7;
   const char decimalsize = 3;
+  char report[255];
   char pressure_str[floatsize + 1];
   char temperature_str[floatsize + 1];
   char altitude_str[floatsize + 1];
@@ -99,15 +125,23 @@ char* altimu10() {
            ag.g.x, ag.g.y, ag.g.z,
            mag.m.x, mag.m.y, mag.m.z,
            pressure_str, temperature_str, altitude_str);
-  return report;
+           return report;
 }
-
 
 void loop() {
   ag_read();
   mag_read();
   pta_read();
-  altimu10();
-  lora_send();
-  delay(DELAY);
+
+  //Creamos la cadena de datos para enviar
+  String datos = "";
+  datos = altimu10();
+  //Enviamos paquete de datos
+  Serial.print("Enviando paquete...");
+  Serial.println(contador);
+  LoRa.beginPacket();
+  LoRa.print(datos);
+  LoRa.endPacket();
+  contador += 1;
+  delay (5000);
 }
