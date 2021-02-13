@@ -65,9 +65,9 @@ void altimu10(){
   const char floatsize = 7;
   const char decimalsize = 3;
   char report[255];
-  char pressure_str[floatsize];
-  char temperature_str[floatsize];
-  char altitude_str[floatsize];
+  char pressure_str[floatsize + 1];
+  char temperature_str[floatsize + 1];
+  char altitude_str[floatsize + 1];
   dtostrf(pressure, floatsize, decimalsize, pressure_str);
   dtostrf(temperature, floatsize, decimalsize, temperature_str);
   dtostrf(altitude, floatsize, decimalsize, altitude_str);
