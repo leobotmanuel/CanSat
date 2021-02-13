@@ -12,8 +12,8 @@ float temperature;
 float altitude;
 
 void ag_init() {
-  if (!ag.init()){
-    Serial.println("Failed to detect and initialize IMU!");
+  if (!ag.init()) {
+    Serial.println("Failed to detect and initialize gyroscope!");
     while (1);
   }
   ag.enableDefault();
@@ -21,7 +21,7 @@ void ag_init() {
 
 
 void mag_init() {
-  if (!mag.init()){
+  if (!mag.init()) {
     Serial.println("Failed to detect and initialize magnetometer!");
     while (1);
   }
@@ -30,7 +30,7 @@ void mag_init() {
 
 
 void pta_init() {
-  if (!pta.init()){
+  if (!pta.init()) {
     Serial.println("Failed to autodetect pressure sensor!");
     while (1);
   }
@@ -40,18 +40,21 @@ void pta_init() {
 
 void setup() {
   Serial.begin(9600);
+  Serial.println("iniciando");
+
   Wire.begin();
   ag_init();
   mag_init();
-  pta_init();  
+  pta_init();
+  
 }
 
 void ag_read() {
-    ag.read();
+  ag.read();
 }
 
 void mag_read() {
-    mag.read();
+  mag.read();
 }
 
 
@@ -61,7 +64,7 @@ void pta_read() {
   altitude = pta.pressureToAltitudeMeters(pressure);
 }
 
-void altimu10(){
+void altimu10() {
   const char floatsize = 7;
   const char decimalsize = 3;
   char report[255];
@@ -71,11 +74,11 @@ void altimu10(){
   dtostrf(pressure, floatsize, decimalsize, pressure_str);
   dtostrf(temperature, floatsize, decimalsize, temperature_str);
   dtostrf(altitude, floatsize, decimalsize, altitude_str);
-  snprintf(report, sizeof(report), "%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s", 
-    ag.a.x, ag.a.y, ag.a.z,
-    ag.g.x, ag.g.y, ag.g.z,
-    mag.m.x, mag.m.y, mag.m.z,
-    pressure_str, temperature_str, altitude_str);
+  snprintf(report, sizeof(report), "%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s",
+           ag.a.x, ag.a.y, ag.a.z,
+           ag.g.x, ag.g.y, ag.g.z,
+           mag.m.x, mag.m.y, mag.m.z,
+           pressure_str, temperature_str, altitude_str);
   Serial.println(report);
 }
 
