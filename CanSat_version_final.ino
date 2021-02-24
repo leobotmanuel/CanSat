@@ -41,20 +41,8 @@ void setup() {
 
 void loop() {
   leer_sensores();
-
-  //Creamos la cadena de datos para enviar
-  String datos = String(millis()/1000);
-  datos += ",";
-  datos += String(altimu10());
-  Serial.println(datos);
-  //Enviamos paquete de datos
-  Serial.print("Enviando paquete...");
-  Serial.println(contador);
-  LoRa.beginPacket();
-  LoRa.print(datos);
-  LoRa.endPacket();
-  contador += 1;
-  delay (1000);
+  String datos_del_CanSat = crear_cadena();
+  enviar_por_LoRa(datos_del_CanSat);
 }
 
 
@@ -113,20 +101,42 @@ void leer_sensores() {
 }
 
 
-String altimu10() {
+String datos_del_giroscopio() {
   const char floatsize = 7;
   const char decimalsize = 3;
-  char report[255];
-  char pressure_str[floatsize + 1];
-  char temperature_str[floatsize + 1];
-  char altitude_str[floatsize + 1];
-  dtostrf(presion_giroscopio, floatsize, decimalsize, pressure_str);
-  dtostrf(temperatura_giroscopio, floatsize, decimalsize, temperature_str);
-  dtostrf(altura_giroscopio, floatsize, decimalsize, altitude_str);
+  char reporte[255];
+  char presion_giroscopio_str[floatsize + 1];
+  char temperatura_giroscopio_str[floatsize + 1];
+  char altura_giroscopio_str[floatsize + 1];
+  dtostrf(presion_giroscopio, floatsize, decimalsize, presion_giroscopio_str);
+  dtostrf(temperatura_giroscopio, floatsize, decimalsize, temperatura_giroscopio_str);
+  dtostrf(altura_giroscopio, floatsize, decimalsize, altura_giroscopio_str);
   snprintf(report, sizeof(report), "%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s",
            ag.a.x, ag.a.y, ag.a.z,
            ag.g.x, ag.g.y, ag.g.z,
            mag.m.x, mag.m.y, mag.m.z,
-           pressure_str, temperature_str, altitude_str);
-           return report;
+           presion_giroscopio_str, temperatura_giroscopio_str, altura_giroscopio_str);
+           return reporte;
+}
+
+
+String crear_cadena() {
+  //Creamos la cadena de datos para enviar
+  String datos = String(millis()/1000);
+  datos += ",";
+  datos += String(datos_del_giroscopio());
+  Serial.println(datos);
+  return datos;
+}
+
+
+void enviar_por_LoRa(String datos) {
+  //Enviamos paquete de datos
+  Serial.print("Enviando paquete...");
+  Serial.println(contador);
+  LoRa.beginPacket();
+  LoRa.print(datos);
+  LoRa.endPacket();
+  contador += 1;
+  delay (1000);
 }
