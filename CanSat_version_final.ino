@@ -1,10 +1,12 @@
-  //Importamos las librerias
+//Importamos las librerias
 #include <Wire.h>
 #include <SPI.h>
 #include <LoRa.h>
 #include <LSM6.h>
 #include <LIS3MDL.h>
 #include <LPS.h>
+#include <Adafruit_BME280.h>
+#include <math.h>
 
 //Definimos los pines del modulo LoRa
 #define SCK 5
@@ -29,6 +31,11 @@ float presion_giroscopio;
 float temperatura_giroscopio;
 float altura_giroscopio;
 
+//Configuracion del bme
+Adafruit_BME280 bme;
+//Adafruit_Sensor *temperatura_bme = bme.getTemperatureSensor();
+//Adafruit_Sensor *presion_bme = bme.getPressureSensor();
+//Adafruit_Sensor *humedad_bme = bme.getHumiditySensor();
 
 void setup() {
   Serial.begin(9600);
@@ -43,6 +50,8 @@ void loop() {
   leer_sensores();
   String datos_del_CanSat = crear_cadena();
   enviar_por_LoRa(datos_del_CanSat);
+  
+  delay(2000);
 }
 
 
@@ -101,6 +110,24 @@ void leer_sensores() {
 }
 
 
+String datos_del_bme() {
+  //Leer los valores del bme
+  sensors_event_t temp_event, pressure_event, humidity_event;
+  /*temperatura_bme->getEvent(&temp_event);
+  presion_bme->getEvent(&pressure_event);
+  humedad_bme->getEvent(&humidity_event);*/
+  float temperatura_bme = bme.readTemperature();
+  float presion_bme = bme.readPressure();
+  float humedad_bme = bme.readHumidity();
+  float altitud_bme = bme.readAltitude(1035.5);
+  String valores_bme = String(temperatura_bme);
+  valores_bme += String(presion_bme);
+  valores_bme += String(humedad_bme);
+  valores_bme += String(altitud_bme);
+  return valores_bme;
+}
+
+
 String datos_del_giroscopio() {
   const char floatsize = 7;
   const char decimalsize = 3;
@@ -111,7 +138,7 @@ String datos_del_giroscopio() {
   dtostrf(presion_giroscopio, floatsize, decimalsize, presion_giroscopio_str);
   dtostrf(temperatura_giroscopio, floatsize, decimalsize, temperatura_giroscopio_str);
   dtostrf(altura_giroscopio, floatsize, decimalsize, altura_giroscopio_str);
-  snprintf(report, sizeof(report), "%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s",
+  snprintf(reporte, sizeof(reporte), "%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s",
            ag.a.x, ag.a.y, ag.a.z,
            ag.g.x, ag.g.y, ag.g.z,
            mag.m.x, mag.m.y, mag.m.z,
@@ -124,7 +151,8 @@ String crear_cadena() {
   //Creamos la cadena de datos para enviar
   String datos = String(millis()/1000);
   datos += ",";
-  datos += String(datos_del_giroscopio());
+  datos += datos_del_giroscopio();
+  datos += datos_del_bme();
   Serial.println(datos);
   return datos;
 }
@@ -139,4 +167,4 @@ void enviar_por_LoRa(String datos) {
   LoRa.endPacket();
   contador += 1;
   delay (1000);
-}
+} 
