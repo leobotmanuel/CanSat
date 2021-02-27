@@ -5,6 +5,7 @@
 #include <LSM6.h>
 #include <LIS3MDL.h>
 #include <LPS.h>
+#include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 #include <math.h>
 #include "Adafruit_CCS811.h"
@@ -21,7 +22,7 @@
 
 //Definimos pines del sensor UV
 #define ANALOGPIN A0
-#define ENABLEPIN 4
+#define ENABLEPIN 19
 
 //Definimos la banda de LoRa
 #define BANDA 868E6
@@ -51,11 +52,15 @@ Adafruit_BME280 bme;
 Adafruit_CCS811 ccs;
 
 //Activar el sensor UV
-ML8511 sensorUV(ANALOGPIN, ENABLEPIN);
+//ML8511 sensorUV(ANALOGPIN, ENABLEPIN);
 
 void setup() {
   Serial.begin(9600);
   Wire.begin();
+  if (!bme.begin()) {
+    Serial.println(F("No se ha encontrado el sensor BME280"));
+    while (1) delay(10);
+  }
   GPS.begin(9600); 
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); 
@@ -63,11 +68,16 @@ void setup() {
   delay(1000);
   GPSSerial.println(PMTK_Q_RELEASE);
   
-  sensorUV.enable();
+  //sensorUV.enable();
   iniciar_giroscopio();
   iniciar_magnetometro();
   iniciar_barometro();
   iniciarLora();
+    if(!ccs.begin()){
+    Serial.println("Failed to start sensor! Please check your wiring.");
+    while(1);
+  }
+  while(!ccs.available());
 }
 
 void loop() {
@@ -122,11 +132,10 @@ void iniciarLora() {
 
 String datos_del_bme() {
   //Leer los valores del bme
-  sensors_event_t temp_event, pressure_event, humidity_event;
   float temperatura_bme = bme.readTemperature();
   float presion_bme = bme.readPressure();
   float humedad_bme = bme.readHumidity();
-  float altitud_bme = bme.readAltitude(1035.5);
+  float altitud_bme = bme.readAltitude(1013.25);
   String valores_bme = String(temperatura_bme);
   valores_bme += ",";
   valores_bme += String(presion_bme);
@@ -151,7 +160,7 @@ String datos_del_GPS() {
   valores_GPS += String(altitud);
   return valores_GPS;
 }
-  
+
 
 String datos_del_giroscopio() {
   ag.read();
@@ -177,28 +186,26 @@ String datos_del_giroscopio() {
 }
 
 String datosDelAire() {
-  float CO2;
-  float gv;
-  if(ccs.available()){
-    if(!ccs.readData()){
-      CO2 = ccs.geteCO2();
-      gv = ccs.getTVOC();
+    if(ccs.available()){
+      if(!ccs.readData()){
+      float co = ccs.geteCO2();
+      float gv = ccs.getTVOC();
+      String datosAire = String(co);
+      datosAire += ",";
+      datosAire += String(gv);
+      return datosAire;
     }
-  }
-  String datosAire = String(CO2);
-  datosAire += ",";
-  datosAire += String(gv);
-  return datosAire;
+   }
 }
 
 
-String datosUV() {
+/*String datosUV() {
   float UV = sensorUV.getUV();
   float duv = UV / .2;
   String strduv = String(duv);
   return strduv;
 }
-
+*/
 void configurar_GPS() {
   char c = GPS.read();
   if (GPSECHO)
@@ -209,6 +216,7 @@ void configurar_GPS() {
   return; 
   }
 }
+
 
 String crear_cadena() {
   //Creamos la cadena de datos para enviar
@@ -222,7 +230,7 @@ String crear_cadena() {
   datos += ",";
   datos += datosDelAire();
   datos += ",";
-  datos += datosUV();
+  //datos += datosUV();
   Serial.println(datos);
   return datos;
 }
