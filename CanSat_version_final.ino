@@ -56,7 +56,7 @@ ML8511 sensorUV(ANALOGPIN, ENABLEPIN);
 void setup() {
   Serial.begin(9600);
   Wire.begin();
-  GPS.Begin(9600); 
+  GPS.begin(9600); 
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); 
   GPS.sendCommand(PGCMD_ANTENNA);
@@ -69,8 +69,6 @@ void setup() {
   iniciar_barometro();
   iniciarLora();
 }
-
-
 
 void loop() {
   String datos_del_CanSat = crear_cadena();
@@ -179,10 +177,12 @@ String datos_del_giroscopio() {
 }
 
 String datosDelAire() {
+  float CO2;
+  float gv;
   if(ccs.available()){
     if(!ccs.readData()){
-      float CO2 = ccs.geteCO2;
-      float gv = ccs.getTVOC;
+      CO2 = ccs.geteCO2();
+      gv = ccs.getTVOC();
     }
   }
   String datosAire = String(CO2);
@@ -192,8 +192,8 @@ String datosDelAire() {
 }
 
 
-string datosUV() {
-  UV = sensorUV.getUV();
+String datosUV() {
+  float UV = sensorUV.getUV();
   float duv = UV / .2;
   String strduv = String(duv);
   return strduv;
@@ -208,7 +208,7 @@ void configurar_GPS() {
   if (!GPS.parse(GPS.lastNMEA()))
   return; 
   }
-
+}
 
 String crear_cadena() {
   //Creamos la cadena de datos para enviar
