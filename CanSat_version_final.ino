@@ -48,7 +48,6 @@ void setup() {
 
 
 void loop() {
-  leer_sensores();
   String datos_del_CanSat = crear_cadena();
   enviar_por_LoRa(datos_del_CanSat);
   delay(1000);
@@ -96,18 +95,6 @@ void iniciarLora() {
 }
 
 
-void leer_sensores() {
-  //Leer el valor del giroscopio
-  ag.read();
-  //Leer el valor del magnetometro
-  mag.read();
-  //Leer la presion, la temperatura y la altura del giroscopio
-  presion_giroscopio = pta.readPressureMillibars();
-  temperatura_giroscopio = pta.readTemperatureC();
-  altura_giroscopio = pta.pressureToAltitudeMeters(presion_giroscopio);
-}
-
-
 String datos_del_bme() {
   //Leer los valores del bme
   sensors_event_t temp_event, pressure_event, humidity_event;
@@ -127,6 +114,11 @@ String datos_del_bme() {
 
 
 String datos_del_giroscopio() {
+  ag.read();
+  mag.read();
+  presion_giroscopio = pta.readPressureMillibars();
+  temperatura_giroscopio = pta.readTemperatureC();
+  altura_giroscopio = pta.pressureToAltitudeMeters(presion_giroscopio);
   const char floatsize = 7;
   const char decimalsize = 3;
   char reporte[255];
