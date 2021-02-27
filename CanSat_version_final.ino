@@ -7,6 +7,7 @@
 #include <LPS.h>
 #include <Adafruit_BME280.h>
 #include <math.h>
+#include "Adafruit_CCS811.h"
 
 //Definimos los pines del modulo LoRa
 #define SCK 5
@@ -31,11 +32,9 @@ float presion_giroscopio;
 float temperatura_giroscopio;
 float altura_giroscopio;
 
-//Configuracion del bme
+//Adaptar nombre de las librerias
 Adafruit_BME280 bme;
-//Adafruit_Sensor *temperatura_bme = bme.getTemperatureSensor();
-//Adafruit_Sensor *presion_bme = bme.getPressureSensor();
-//Adafruit_Sensor *humedad_bme = bme.getHumiditySensor();
+Adafruit_CCS811 ccs;
 
 void setup() {
   Serial.begin(9600);
@@ -46,14 +45,14 @@ void setup() {
   iniciarLora();
 }
 
+
+
 void loop() {
   leer_sensores();
   String datos_del_CanSat = crear_cadena();
   enviar_por_LoRa(datos_del_CanSat);
-  
-  delay(2000);
+  delay(1000);
 }
-
 
 void iniciar_giroscopio() {
   if (!ag.init()) {
@@ -71,7 +70,6 @@ void iniciar_magnetometro() {
   }
   mag.enableDefault();
 }
-
 
 void iniciar_barometro() {
   if (!pta.init()) {
@@ -146,13 +144,24 @@ String datos_del_giroscopio() {
            return reporte;
 }
 
-
+String datosDelAire() {
+  if(ccs.available()){
+    if(!ccs.readData()){
+      float CO2 = ccs.geteCO2;
+      float gv = ccs.getTVOC;
+    }
+  }
+  String datosAire = String(CO2);
+  datosAire += String(gv);
+  return datosAire;
+}
 String crear_cadena() {
   //Creamos la cadena de datos para enviar
   String datos = String(millis()/1000);
   datos += ",";
   datos += datos_del_giroscopio();
   datos += datos_del_bme();
+  datos += datosDelAire();
   Serial.println(datos);
   return datos;
 }
