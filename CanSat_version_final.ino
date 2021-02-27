@@ -9,6 +9,7 @@
 #include <math.h>
 #include "Adafruit_CCS811.h"
 #include <ML8511.h>
+#include <Adafruit_GPS.h>
 
 //Definimos los pines del modulo LoRa
 #define SCK 5
@@ -24,6 +25,14 @@
 
 //Definimos la banda de LoRa
 #define BANDA 868E6
+
+//Definimos el pin del GPS
+#define GPSSerial Serial2 
+
+//Conectar GPS
+Adafruit_GPS GPS(&GPSSerial);
+
+#define GPSECHO false
 
 //Contador de paquetes LoRa
 int contador = 0;
@@ -47,6 +56,13 @@ ML8511 sensorUV(ANALOGPIN, ENABLEPIN);
 void setup() {
   Serial.begin(9600);
   Wire.begin();
+  GPS.Begin(9600); 
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); 
+  GPS.sendCommand(PGCMD_ANTENNA);
+  delay(1000);
+  GPSSerial.println(PMTK_Q_RELEASE);
+  
   sensorUV.enable();
   iniciar_giroscopio();
   iniciar_magnetometro();
@@ -60,6 +76,8 @@ void loop() {
   String datos_del_CanSat = crear_cadena();
   enviar_por_LoRa(datos_del_CanSat);
   delay(1000);
+  
+  
 }
 
 void iniciar_giroscopio() {
@@ -107,9 +125,6 @@ void iniciarLora() {
 String datos_del_bme() {
   //Leer los valores del bme
   sensors_event_t temp_event, pressure_event, humidity_event;
-  /*temperatura_bme->getEvent(&temp_event);
-  presion_bme->getEvent(&pressure_event);
-  humedad_bme->getEvent(&humidity_event);*/
   float temperatura_bme = bme.readTemperature();
   float presion_bme = bme.readPressure();
   float humedad_bme = bme.readHumidity();
@@ -124,6 +139,21 @@ String datos_del_bme() {
   return valores_bme;
 }
 
+String datos_del_GPS() {
+  float latitud = GPS.lat;
+  float longitud = GPS.lon;
+  float velocidad = GPS.speed;
+  float altitud = GPS.altitude; 
+  String valores_GPS = String(latitud);
+  valores_GPS += ",";
+  valores_GPS += String(longitud);
+  valores_GPS += ",";
+  valores_GPS += String(velocidad);
+  valores_GPS += ",";
+  valores_GPS += String(altitud);
+  return valores_GPS;
+}
+  
 
 String datos_del_giroscopio() {
   ag.read();
@@ -169,11 +199,24 @@ string datosUV() {
   return strduv;
 }
 
+void configurar_GPS() {
+  char c = GPS.read();
+  if (GPSECHO)
+  if (c) Serial.print(c);
+  if (GPS.newNMEAreceived()) {
+  Serial.print(GPS.lastNMEA());
+  if (!GPS.parse(GPS.lastNMEA()))
+  return; 
+  }
+
+
 String crear_cadena() {
   //Creamos la cadena de datos para enviar
   String datos = String(millis()/1000);
   datos += ",";
   datos += datos_del_giroscopio();
+  datos += ",";
+  datos += datos_del_GPS();
   datos += ",";
   datos += datos_del_bme();
   datos += ",";
