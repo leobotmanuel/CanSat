@@ -21,7 +21,7 @@
 
 //Definimos pines del sensor UV
 #define ANALOGPIN A0
-#define ENABLEPIN 7
+#define ENABLEPIN 4
 
 //Definimos la banda de LoRa
 #define BANDA 868E6
