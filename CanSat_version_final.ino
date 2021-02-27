@@ -244,5 +244,4 @@ void enviar_por_LoRa(String datos) {
   LoRa.print(datos);
   LoRa.endPacket();
   contador += 1;
-  delay (1000);
 } 
