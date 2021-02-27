@@ -8,6 +8,7 @@
 #include <Adafruit_BME280.h>
 #include <math.h>
 #include "Adafruit_CCS811.h"
+#include <ML8511.h>
 
 //Definimos los pines del modulo LoRa
 #define SCK 5
@@ -16,6 +17,10 @@
 #define SS 18
 #define RST 14
 #define DIO0 26
+
+//Definimos pines del sensor UV
+#define ANALOGPIN A0
+#define ENABLEPIN 7
 
 //Definimos la banda de LoRa
 #define BANDA 868E6
@@ -36,9 +41,13 @@ float altura_giroscopio;
 Adafruit_BME280 bme;
 Adafruit_CCS811 ccs;
 
+//Activar el sensor UV
+ML8511 sensorUV(ANALOGPIN, ENABLEPIN);
+
 void setup() {
   Serial.begin(9600);
   Wire.begin();
+  sensorUV.enable();
   iniciar_giroscopio();
   iniciar_magnetometro();
   iniciar_barometro();
@@ -106,8 +115,11 @@ String datos_del_bme() {
   float humedad_bme = bme.readHumidity();
   float altitud_bme = bme.readAltitude(1035.5);
   String valores_bme = String(temperatura_bme);
+  valores_bme += ",";
   valores_bme += String(presion_bme);
+  valores_bme += ",";
   valores_bme += String(humedad_bme);
+  valores_bme += ",";
   valores_bme += String(altitud_bme);
   return valores_bme;
 }
@@ -144,16 +156,29 @@ String datosDelAire() {
     }
   }
   String datosAire = String(CO2);
+  datosAire += ",";
   datosAire += String(gv);
   return datosAire;
 }
+
+
+string datosUV() {
+  UV = sensorUV.getUV();
+  float duv = UV / .2;
+  String strduv = String(duv);
+  return strduv;
+}
+
 String crear_cadena() {
   //Creamos la cadena de datos para enviar
   String datos = String(millis()/1000);
   datos += ",";
   datos += datos_del_giroscopio();
+  datos += ",";
   datos += datos_del_bme();
+  datos += ",";
   datos += datosDelAire();
+  datos += datosUV();
   Serial.println(datos);
   return datos;
 }
