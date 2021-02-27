@@ -178,6 +178,7 @@ String crear_cadena() {
   datos += datos_del_bme();
   datos += ",";
   datos += datosDelAire();
+  datos += ",";
   datos += datosUV();
   Serial.println(datos);
   return datos;
