@@ -55,7 +55,7 @@ Adafruit_CCS811 ccs;
 ML8511 sensorUV(ANALOGPIN, ENABLEPIN);
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Wire.begin();
   if (!bme.begin()) {
     Serial.println(F("No se ha encontrado el sensor BME280"));
@@ -81,6 +81,7 @@ void setup() {
 }
 
 void loop() {
+  configurar_GPS();
   String datos_del_CanSat = crear_cadena();
   enviar_por_LoRa(datos_del_CanSat);
   delay(1000);
@@ -209,11 +210,11 @@ String datosUV() {
 void configurar_GPS() {
   char c = GPS.read();
   if (GPSECHO)
-  if (c) Serial.print(c);
+    if (c) Serial.print(c);
   if (GPS.newNMEAreceived()) {
-  Serial.print(GPS.lastNMEA());
-  if (!GPS.parse(GPS.lastNMEA()))
-    return; 
+    Serial.print(GPS.lastNMEA());
+    if (!GPS.parse(GPS.lastNMEA()))
+      return; 
   }
 }
 
