@@ -52,7 +52,7 @@ Adafruit_BME280 bme;
 Adafruit_CCS811 ccs;
 
 //Activar el sensor UV
-//ML8511 sensorUV(ANALOGPIN, ENABLEPIN);
+ML8511 sensorUV(ANALOGPIN, ENABLEPIN);
 
 void setup() {
   Serial.begin(9600);
@@ -199,13 +199,13 @@ String datosDelAire() {
 }
 
 
-/*String datosUV() {
+String datosUV() {
   float UV = sensorUV.getUV();
-  float duv = UV / .2;
+  float duv = UV * .1;
   String strduv = String(duv);
   return strduv;
 }
-*/
+
 void configurar_GPS() {
   char c = GPS.read();
   if (GPSECHO)
@@ -213,7 +213,7 @@ void configurar_GPS() {
   if (GPS.newNMEAreceived()) {
   Serial.print(GPS.lastNMEA());
   if (!GPS.parse(GPS.lastNMEA()))
-  return; 
+    return; 
   }
 }
 
@@ -230,7 +230,7 @@ String crear_cadena() {
   datos += ",";
   datos += datosDelAire();
   datos += ",";
-  //datos += datosUV();
+  datos += datosUV();
   Serial.println(datos);
   return datos;
 }
