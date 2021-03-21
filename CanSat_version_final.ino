@@ -108,9 +108,12 @@ void loop() {
   aes.set_IV(my_iv);
   aes.get_IV(iv);
   aes.do_aes_encrypt(planito,plainLength,cipher,key,128,iv);
+  aes.do_aes_decrypt(cipher,padedLength,check,key,128,iv);
   aes.printArray(cipher,(bool)false);
+  aes.printArray(check,(bool)true);
   
-  delay(1000);
+  
+  delay(5000);
   
   
 }
