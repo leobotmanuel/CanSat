@@ -1,4 +1,4 @@
-#include <Adafruit_GPS.h>
+//#include <Adafruit_GPS.h>
 #include <SPI.h>
 #include <LoRa.h>
 /*
@@ -70,8 +70,8 @@ void loop()
     }
   }
 */
-  float nuestraLatitud = 3.4;//GPS.lat;
-  float nuestraLongitud = 3.3;//GPS.lon;
+  float nuestraLatitud = 1;//GPS.lat;
+  float nuestraLongitud = -1.3;//GPS.lon;
   String latitud;
   String longitud;
   int counter = 0;
@@ -87,7 +87,7 @@ void loop()
     Serial.println(LoRa.packetRssi());
   }*/
 
-  datos = "98789797.7876;4545.345";
+  datos = "2;-3.3";
   
   for(int i = 0; i < datos.length(); i++) {
     if (datos[i] == ';') {
@@ -102,34 +102,56 @@ void loop()
       }
     }
   }
-
-  Serial.print(longitud);
-  Serial.print(latitud);
-
   float suLatitud = latitud.toFloat();
   float suLongitud = longitud.toFloat();
+
+  suLongitud += 180;
+  suLatitud += 90;
+  nuestraLongitud += 180;
+  nuestraLatitud += 90;
+
+  Serial.print(suLongitud);
+  Serial.println("º (Longitud");
+  Serial.print(suLatitud);
+  Serial.println("º (Latitud)");
+
 
   float distlat = (nuestraLatitud - suLatitud);
   float distlon = (nuestraLongitud - suLongitud);
 
   if (distlat < 0){
-    distlat += distlat*2;
+    distlat *= -1;
   }
   if (distlon < 0){
-    distlon += distlon*2;
+    distlon *= -1;
   }
+  
+  Serial.print(distlat);
+  Serial.println("º");
+  Serial.print(distlon);
+  Serial.println("º");
 
-  distlat *= 111,3194;
-  distlon *= 111,3194;
+  distlat *= 111.3194 * 2;
+  distlon *= 111.3194;
 
-  float distancia = sqrt(pow(distlat, 2) +  pow(distlon, 2));
+  float distancia = sqrt(pow(distlat, 2) + pow(distlon, 2));
   distancia *= 1000;
   Serial.print(distancia);
-  Serial.println(" (m)");
+  Serial.println("m");
+  distancia /= 1000;
+  
+  Serial.print(distlat);
+  Serial.println("km");
+  Serial.print(distlon);
+  Serial.println("km");
 
-  float alpha = acos(distlat / distancia);
-  Serial.print(alpha);
+  float dif = distlat/distancia;
+
+  float alpha = acos(dif);
+  float angulo = (alpha*180)/PI;
+  Serial.print(angulo);
   Serial.println("º con respecto al norte");  
   
-  delay(1000);
+  Serial.print("\n");
+  delay(5000);
 }
