@@ -1,0 +1,104 @@
+
+#include <LoRa.h>
+#include <Wire.h>
+#include <SPI.h>
+
+// Definimos los pines de los servomotores
+#define ANALOGPIN A1 
+
+//Definimos los pines del modulo LoRa
+#define SCK 5
+#define MISO 19
+#define MOSI 27
+#define SS 18
+#define RST 14
+#define DIO0 26
+
+// Declaramos el ancho de banda del LoRa
+#define BANDA 868E6
+
+// Declaramos las variables
+
+int angulo1 = 0;  
+int angulo2 = 0;
+
+int counter = 0;  // Conteo de paquetes enviados
+
+//Clave privada y vector de inicializacion
+byte *key = (unsigned char*)"0123456789010123";
+unsigned long long int my_iv = 36753562;
+
+void setup() 
+{
+  Serial.begin(9600);
+  iniciar_Lora();
+}
+
+void iniciar_Lora() {
+
+//Pines SPI de LoRa
+  SPI.begin(SCK, MISO, MOSI, SS);
+  
+//Pines LoRa
+  LoRa.setPins(SS, RST, DIO0);
+
+//Iniciamos LoRa
+  if (!LoRa.begin(BANDA)) 
+  {
+    Serial.println("Error al inicial LoRa!");
+    while (1);
+  }
+  
+  Serial.println("LoRa iniciada correctamente!");
+  delay(2000);
+} 
+
+void loop() 
+{
+  int joy = analogRead(A1);
+
+  if (joy <= 490)
+  {
+    
+    angulo1 = map(joy, 0, 2040, 90, 0);
+    
+  } else {
+    
+    angulo1 = 0;
+    
+  }
+
+  if (joy >= 510)
+  {
+  
+    angulo2 = map(joy, 2050, 4095, 0, 90);
+    
+  }else{
+    
+    angulo2 = 0;
+    
+  }
+
+  Serial.print("Joystick: ");
+  Serial.println(joy);
+  
+  Serial.print("Ángulo 1: ");
+  Serial.println(angulo1);
+  
+  Serial.print("Ángulo 2: ");
+  Serial.println(angulo2);
+
+  Serial.print("Sending packet: ");
+  Serial.println(counter);
+
+  // Envio de paquetes
+  LoRa.beginPacket();
+  LoRa.print(angulo1);
+  LoRa.print(angulo2);
+  LoRa.print(counter);
+  LoRa.endPacket();
+
+  counter += 1;  // Conteo de paquetes
+
+  delay(1000);
+}
