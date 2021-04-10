@@ -1,7 +1,7 @@
-//#include <Adafruit_GPS.h>
+#include <Adafruit_GPS.h>
 #include <SPI.h>
 #include <LoRa.h>
-/*
+
 #define GPSSerial Serial2
 
 Adafruit_GPS GPS(&GPSSerial);
@@ -9,10 +9,10 @@ Adafruit_GPS GPS(&GPSSerial);
 #define GPSECHO false
 
 uint32_t timer = millis();
-*/
+
 void setup()
 {
-  Serial.begin(115200);/*
+  Serial.begin(115200);
   Serial.println("Adafruit GPS library basic parsing test!");
   GPS.begin(9600);
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
@@ -21,14 +21,14 @@ void setup()
   delay(1000);
   GPSSerial.println(PMTK_Q_RELEASE);
 
-  if (!LoRa.begin(915E6)) {
+  if (!LoRa.begin(868E6)) {
     Serial.println("Starting LoRa failed!");
     while (1);
-  }*/
+  }
 }
 
 void loop()
-{/*
+{
   char c = GPS.read();
   if (GPSECHO)
     if (c) Serial.print(c);
@@ -69,13 +69,13 @@ void loop()
       Serial.print("Satellites: "); Serial.println((int)GPS.satellites);
     }
   }
-*/
-  float nuestraLatitud = 1;//GPS.lat;
-  float nuestraLongitud = -1.3;//GPS.lon;
+
+  float nuestraLatitud = GPS.lat;
+  float nuestraLongitud = GPS.lon;
   String latitud;
   String longitud;
   int counter = 0;
-  String datos = "";/*
+  String datos = "";
   int packetSize = LoRa.parsePacket();
   
   if (packetSize) {
@@ -85,10 +85,8 @@ void loop()
     }
     Serial.print("' with RSSI ");
     Serial.println(LoRa.packetRssi());
-  }*/
+  }
 
-  datos = "2;-3.3";
-  
   for(int i = 0; i < datos.length(); i++) {
     if (datos[i] == ';') {
       counter++;
