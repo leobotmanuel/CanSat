@@ -11,7 +11,6 @@
 #include "Adafruit_CCS811.h"
 #include <ML8511.h>
 #include <Adafruit_GPS.h>
-#include <AES.h>
 
 //Definimos los pines del modulo LoRa
 #define SCK 5
@@ -42,11 +41,6 @@ int contador = 0;
 LSM6 ag;
 LIS3MDL mag;
 LPS pta;
-AES aes;
-
-//Clave privada y vector de inicializacion
-byte *key = (unsigned char*)"0123456789010123";
-unsigned long long int my_iv = 36753562;
 
 //Variables para almanecer los datos del giroscopio(presion, temperatura y altura)
 float presion_giroscopio;
@@ -74,7 +68,6 @@ void setup() {
   delay(1000);
   GPSSerial.println(PMTK_Q_RELEASE);
   
-  //sensorUV.enable();
   iniciar_giroscopio();
   iniciar_magnetometro();
   iniciar_barometro();
@@ -85,34 +78,12 @@ void setup() {
   }
   while(!ccs.available());
 
-  Serial.setDebugOutput(true);
   delay(500);
 }
 
 void loop() {
   configurar_GPS();
   String datos_del_CanSat = crear_cadena();
-  
-  //Ahora vamos a cifrar los datos
-  byte planito[datos_del_CanSat.length()];
-   datos_del_CanSat.getBytes(planito, datos_del_CanSat.length());
-  int plainLength = sizeof(planito)-1;
-  int padedLength = plainLength + N_BLOCK - plainLength % N_BLOCK;
-
-  aes.iv_inc();
-  byte iv [N_BLOCK] ;
-  byte plain_p[padedLength];
-  byte cipher [padedLength] ;
-  byte check [padedLength] ;
-  unsigned long ms = micros ();
-  aes.set_IV(my_iv);
-  aes.get_IV(iv);
-  aes.do_aes_encrypt(planito,plainLength,cipher,key,128,iv);
-  aes.do_aes_decrypt(cipher,padedLength,check,key,128,iv);
-  aes.printArray(cipher,(bool)false);
-  aes.printArray(check,(bool)true);
-  
-  
   delay(5000);
   
   
