@@ -84,6 +84,7 @@ void setup() {
 void loop() {
   configurar_GPS();
   String datos_del_CanSat = crear_cadena();
+  enviar_por_LoRa(datos_del_CanSat);
   delay(5000);
   
   
