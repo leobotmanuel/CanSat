@@ -213,7 +213,8 @@ String datosUV() {
 
 String datosIR() {
   float Cir = mlx.readObjectTempC();
-  return Cir;
+  String strCir = String(Cir);
+  return strCir;
 }
 
 void configurar_GPS() {
