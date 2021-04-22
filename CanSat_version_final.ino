@@ -11,6 +11,7 @@
 #include "Adafruit_CCS811.h"
 #include <ML8511.h>
 #include <Adafruit_GPS.h>
+#include <Adafruit_MLX90614.h>
 
 //Definimos los pines del modulo LoRa
 #define SCK 5
@@ -41,6 +42,7 @@ int contador = 0;
 LSM6 ag;
 LIS3MDL mag;
 LPS pta;
+Adafruit_MLX90614 mlx = Adafruit_MLX90614();
 
 //Variables para almanecer los datos del giroscopio(presion, temperatura y altura)
 float presion_giroscopio;
@@ -57,6 +59,7 @@ ML8511 sensorUV(ANALOGPIN, ENABLEPIN);
 void setup() {
   Serial.begin(115200);
   Wire.begin();
+  mlx.begin(); 
   if (!bme.begin()) {
     Serial.println(F("No se ha encontrado el sensor BME280"));
     while (1) delay(10);
@@ -208,6 +211,11 @@ String datosUV() {
   return strduv;
 }
 
+String datosIR() {
+  float Cir = mlx.readObjectTempC();
+  return Cir;
+}
+
 void configurar_GPS() {
   char c = GPS.read();
   if (GPSECHO)
@@ -235,6 +243,8 @@ String crear_cadena() {
   datos += datosDelAire();
   datos += ",";
   datos += datosUV();
+  datos += ",";
+  datos += datosIR();
   Serial.println(datos);
   return datos;
 }
