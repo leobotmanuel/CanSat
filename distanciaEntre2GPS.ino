@@ -129,7 +129,7 @@ void loop()
   Serial.print(distlon);
   Serial.println("º");
 
-  distlat *= 111.3194 * 2;
+  distlat *= 111.3194;
   distlon *= 111.3194;
 
   float distancia = sqrt(pow(distlat, 2) + pow(distlon, 2));
