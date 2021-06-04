@@ -218,7 +218,7 @@ String datosUV() {
 }
 
 String datosIR() {
-  float Cir = mlx.readObjectTempC();
+  double Cir = mlx.readObjectTempC();
   String strCir = String(Cir);
   return strCir;
 }
