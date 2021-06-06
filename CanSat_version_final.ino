@@ -237,19 +237,17 @@ void configurar_GPS() {
 
 String crear_cadena() {
   //Creamos la cadena de datos para enviar
-  String datos = "argon";
-  datos += ",";
-  datos += String(millis()/1000);
-  datos += ",";
-  datos += datos_del_giroscopio();
-  datos += ",";
-  datos += datos_del_GPS();
+  String datos = String(millis()/1000);
   datos += ",";
   datos += datos_del_bme();
   datos += ",";
-  datos += datosDelAire();
+  datos += datos_del_GPS();
   datos += ",";
   datos += datosUV();
+  datos += ",";
+  datos += datosDelAire();
+  datos += ",";
+  datos += datos_del_giroscopio();
   datos += ",";
   datos += datosIR();
   Serial.println(datos);
