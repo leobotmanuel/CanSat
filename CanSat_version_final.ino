@@ -12,7 +12,7 @@
 #include <ML8511.h>
 #include <Adafruit_GPS.h>
 #include <Adafruit_MLX90614.h>
-//#include <AES.h>
+#include <AES.h>
 
 //Definimos los pines del modulo LoRa
 #define SCK 5
@@ -44,10 +44,10 @@ LSM6 ag;
 LIS3MDL mag;
 LPS pta;
 Adafruit_MLX90614 mlx = Adafruit_MLX90614();
-//AES aes ;
+AES aes;
 
-//byte *key = (unsigned char*)"0123456789010123";
-//unsigned long long int my_iv = 36753562;
+byte *key = (unsigned char*)"0123456789010123";
+unsigned long long int my_iv = 36753562;
 
 //Variables para almanecer los datos del giroscopio(presion, temperatura y altura)
 float presion_giroscopio;
@@ -237,13 +237,11 @@ void configurar_GPS() {
 
 String crear_cadena() {
   //Creamos la cadena de datos para enviar
-  String datos = String(millis()/1000);
-  datos += ",";
-  datos += datos_del_bme();
-  datos += ",";
-  datos += datos_del_GPS();
+  String datos = datos_del_bme();
   datos += ",";
   datos += datosUV();
+  datos += ",";
+  datos += datos_del_GPS();
   datos += ",";
   datos += datosDelAire();
   datos += ",";
@@ -251,31 +249,31 @@ String crear_cadena() {
   datos += ",";
   datos += datosIR();
   Serial.println(datos);
-  return datos;
 
   //Ciframos los datos
-  /*
+  
   const char *plain_ptr = datos.c_str();
   int plainLength = datos.length();
   int padedLength = plainLength + N_BLOCK - plainLength % N_BLOCK;
   aes.iv_inc();
   byte iv [N_BLOCK] ;
   byte cipher [padedLength] ;
+  String cadenadef;
   aes.set_IV(my_iv);
   aes.get_IV(iv);
   aes.do_aes_encrypt((unsigned char*)plain_ptr, plainLength, cipher, key, 128, iv);
-  chipher.ToString();
-  return cipher;
-  */
+  cadenadef = String((char *)cipher);
+  return cadenadef;
+  
 }
 
 
-void enviar_por_LoRa(String datos) {
+void enviar_por_LoRa(String cadenadef) {
   //Enviamos paquete de datos
   Serial.print("Enviando paquete...");
   Serial.println(contador);
   LoRa.beginPacket();
-  LoRa.print(datos);
+  LoRa.print(cadenadef);
   LoRa.endPacket();
   contador += 1;
 }
