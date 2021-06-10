@@ -47,7 +47,7 @@ Adafruit_MLX90614 mlx = Adafruit_MLX90614();
 AES aes;
 
 byte *key = (unsigned char*)"0123456789010123";
-unsigned long long int my_iv = 36753562;
+int my_iv = 36753562;
 
 //Variables para almanecer los datos del giroscopio(presion, temperatura y altura)
 float presion_giroscopio;
@@ -255,14 +255,20 @@ String crear_cadena() {
   const char *plain_ptr = datos.c_str();
   int plainLength = datos.length();
   int padedLength = plainLength + N_BLOCK - plainLength % N_BLOCK;
-  aes.iv_inc();
   byte iv [N_BLOCK] ;
   byte cipher [padedLength] ;
   String cadenadef;
+  String iv_cambia;
   aes.set_IV(my_iv);
   aes.get_IV(iv);
   aes.do_aes_encrypt((unsigned char*)plain_ptr, plainLength, cipher, key, 128, iv);
+  for (int i = 0; i < 16; i++)
+  {
+    iv_cambia += iv[i];
+  }
+  //cadenadef = iv_cambia;
   cadenadef = String((char *)cipher);
+  Serial.println(cadenadef);
   return cadenadef;
   
 }
