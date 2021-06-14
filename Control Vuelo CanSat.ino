@@ -1,6 +1,6 @@
 #include <SPI.h>
 #include <LoRa.h>
-#include <Servo.h>
+#include <ESP32Servo.h> 
 
 #ifdef __AVR__
 #include <avr/power.h>
@@ -66,8 +66,8 @@ void loop() {
       Serial.println(grados[1]);
       Serial.println(grados[2]);
 
-      servo1.write(int(grados[1]));
-      servo2.write(int(grados[2]));
-    } 
+      servo1.write(grados[1].toInt());
+      servo2.write(grados[2].toInt());
+    }
   }
 }
