@@ -1,13 +1,13 @@
 #include <SPI.h>
 #include <LoRa.h>
-#include <ESP32Servo.h> 
+#include <Servo.h>
 
 #ifdef __AVR__
 #include <avr/power.h>
 #endif
 
-static const int servoPin = 34; //  works with TTGO
-static const int servoPin2 = 35; // works with TTGO
+static const int servoPin = 2; //  works with TTGO
+static const int servoPin2 = 23; // works with TTGO
 
 Servo servo1;
 Servo servo2;
@@ -26,7 +26,7 @@ int contador = 0;
 
 void setup() {
 
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   SPI.begin(SCK, MISO, MOSI, SS);
   LoRa.setPins(SS, RST, DIO0);
