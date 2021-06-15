@@ -41,7 +41,7 @@ Servo servo2;
 #define BANDA 868E6
 
 //Definimos el pin del GPS
-#define GPSSerial Serial2 
+#define GPSSerial Serial2
 
 //Conectar GPS
 Adafruit_GPS GPS(&GPSSerial);
@@ -54,6 +54,9 @@ String prov;
 String grados[3];
 int contador_r = 0;
 int contador = 0;
+
+long lastSendTime = 0;
+int interval = 2000;
 
 LSM6 ag;
 LIS3MDL mag;
@@ -80,18 +83,18 @@ void setup() {
   Serial.begin(115200);
   Serial.println("hola");
   Wire.begin();
-  mlx.begin(); 
+  mlx.begin();
   if (!bme.begin()) {
     Serial.println(F("No se ha encontrado el sensor BME280"));
     while (1) delay(10);
   }
-  GPS.begin(9600); 
+  GPS.begin(9600);
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); 
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
   GPS.sendCommand(PGCMD_ANTENNA);
   delay(1000);
   GPSSerial.println(PMTK_Q_RELEASE);
-  
+
   iniciar_giroscopio();
   iniciar_magnetometro();
   iniciar_barometro();
@@ -99,54 +102,30 @@ void setup() {
 
   servo1.attach(servoPin);
   servo2.attach(servoPin2);
-  
-    if(!ccs.begin()){
+
+  if (!ccs.begin()) {
     Serial.println("Failed to start sensor! Please check your wiring.");
-    while(1);
+    while (1);
   }
-  while(!ccs.available());
+  while (!ccs.available());
 
   delay(500);
 }
 
 void loop() {
-  configurar_GPS();
-  String datos_del_CanSat = crear_cadena();
-  enviar_por_LoRa(datos_del_CanSat);
-  delay(2000);
-  
-  
-}
-
-void control_vuelo() {
-  contador_r = 0;
-  cadena = "";
-  
-  int cualquiermierda = LoRa.parsePacket();
-  if (cualquiermierda) {
-
-    while (LoRa.available()) {
-      cadena.concat((char)LoRa.read());
-    }
-   
-    for (int h = 0; h < cadena.length(); h++) {
-      if (cadena[h] != ',') {
-        prov = prov + cadena[h];
-      } else if (cadena[h] == ',') {
-        grados [contador_r] = prov;
-        prov = "";
-        contador_r ++;
-      }
-    }
-    if (grados[0] == "puto el que lo lea"){
-      Serial.println(grados[1]);
-      Serial.println(grados[2]);
-
-      servo1.write(grados[1].toInt());
-      servo2.write(grados[2].toInt());
-    }
+  if (millis() - lastSendTime > interval) {
+    configurar_GPS();
+    String datos_del_CanSat = crear_cadena();
+    enviar_por_LoRa(datos_del_CanSat);
+    lastSendTime = millis();
+    interval = random(2000) + 1000;
   }
+
+  onReceive(LoRa.parsePacket());
+
 }
+
+
 
 void iniciar_giroscopio() {
   if (!ag.init()) {
@@ -210,7 +189,7 @@ String datos_del_GPS() {
   float latitud = GPS.lat;
   float longitud = GPS.lon;
   float velocidad = GPS.speed;
-  float altitud = GPS.altitude; 
+  float altitud = GPS.altitude;
   String valores_GPS = String(latitud);
   valores_GPS += ",";
   valores_GPS += String(longitud);
@@ -242,12 +221,12 @@ String datos_del_giroscopio() {
            ag.g.x, ag.g.y, ag.g.z,
            mag.m.x, mag.m.y, mag.m.z,
            presion_giroscopio_str, temperatura_giroscopio_str, altura_giroscopio_str);
-           return reporte;
+  return reporte;
 }
 
 String datosDelAire() {
-    if(ccs.available()){
-      if(!ccs.readData()){
+  if (ccs.available()) {
+    if (!ccs.readData()) {
       float co = ccs.geteCO2();
       float gv = ccs.getTVOC();
       String datosAire = String(co);
@@ -255,7 +234,7 @@ String datosDelAire() {
       datosAire += String(gv);
       return datosAire;
     }
-   }
+  }
 }
 
 
@@ -279,7 +258,7 @@ void configurar_GPS() {
   if (GPS.newNMEAreceived()) {
     Serial.print(GPS.lastNMEA());
     if (!GPS.parse(GPS.lastNMEA()))
-      return; 
+      return;
   }
 }
 
@@ -296,11 +275,11 @@ String crear_cadena() {
   datos += ",";
   datos += datos_del_giroscopio();
   datos += ",";
-  datos += datosIR();
+  //datos += datosIR();
   Serial.println(datos);
 
   //Ciframos los datos
-  
+
   const char *plain_ptr = datos.c_str();
   int plainLength = datos.length();
   int padedLength = plainLength + N_BLOCK - plainLength % N_BLOCK;
@@ -319,7 +298,7 @@ String crear_cadena() {
   cadenadef = String((char *)cipher);
   Serial.println(cadenadef);
   return cadenadef;
-  
+
 }
 
 void enviar_por_LoRa(String cadenadef) {
@@ -330,4 +309,67 @@ void enviar_por_LoRa(String cadenadef) {
   LoRa.print(cadenadef);
   LoRa.endPacket();
   contador += 1;
+}
+
+void onReceive(int packetSize) {
+  if (packetSize == 0) return;
+
+  contador_r = 0;
+  cadena = "";
+
+  while (LoRa.available()) {
+    cadena.concat((char)LoRa.read());
+
+  }
+  Serial.println("recibe" + cadena);
+  for (int h = 0; h < cadena.length(); h++) {
+    if (cadena[h] != ',') {
+      prov = prov + cadena[h];
+    } else if (cadena[h] == ',') {
+      grados [contador_r] = prov;
+      prov = "";
+      contador_r ++;
+    }
+  }
+  if (grados[0] == "puto el que lo lea") {
+    Serial.println(grados[1]);
+    Serial.println(grados[2]);
+
+    servo1.write(grados[1].toInt());
+    servo2.write(grados[2].toInt());
+  }
+}
+void control_vuelo() {
+
+  if (!LoRa.begin(868E6)) {
+    Serial.println("Starting LoRa failed!");
+    while (1);
+  }
+  contador_r = 0;
+  cadena = "";
+
+  int cualquiermierda = LoRa.parsePacket();
+  if (cualquiermierda) {
+    Serial.println("loquesea");
+    while (LoRa.available()) {
+      cadena.concat((char)LoRa.read());
+    }
+
+    for (int h = 0; h < cadena.length(); h++) {
+      if (cadena[h] != ',') {
+        prov = prov + cadena[h];
+      } else if (cadena[h] == ',') {
+        grados [contador_r] = prov;
+        prov = "";
+        contador_r ++;
+      }
+    }
+    if (grados[0] == "puto el que lo lea") {
+      Serial.println(grados[1]);
+      Serial.println(grados[2]);
+
+      servo1.write(grados[1].toInt());
+      servo2.write(grados[2].toInt());
+    }
+  }
 }
