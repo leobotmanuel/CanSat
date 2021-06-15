@@ -13,6 +13,17 @@
 #include <Adafruit_GPS.h>
 #include <Adafruit_MLX90614.h>
 #include <AES.h>
+#include <Servo.h>
+
+#ifdef __AVR__
+#include <avr/power.h>
+#endif
+
+static const int servoPin = 2; //  works with TTGO
+static const int servoPin2 = 23; // works with TTGO
+
+Servo servo1;
+Servo servo2;
 
 //Definimos los pines del modulo LoRa
 #define SCK 5
@@ -38,6 +49,10 @@ Adafruit_GPS GPS(&GPSSerial);
 #define GPSECHO false
 
 //Contador de paquetes LoRa
+String cadena;
+String prov;
+String grados[3];
+int contador_r = 0;
 int contador = 0;
 
 LSM6 ag;
@@ -62,7 +77,7 @@ Adafruit_CCS811 ccs;
 ML8511 sensorUV(ANALOGPIN, ENABLEPIN);
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println("hola");
   Wire.begin();
   mlx.begin(); 
@@ -81,6 +96,10 @@ void setup() {
   iniciar_magnetometro();
   iniciar_barometro();
   iniciarLora();
+
+  servo1.attach(servoPin);
+  servo2.attach(servoPin2);
+  
     if(!ccs.begin()){
     Serial.println("Failed to start sensor! Please check your wiring.");
     while(1);
@@ -97,6 +116,36 @@ void loop() {
   delay(2000);
   
   
+}
+
+void control_vuelo() {
+  contador_r = 0;
+  cadena = "";
+  
+  int cualquiermierda = LoRa.parsePacket();
+  if (cualquiermierda) {
+
+    while (LoRa.available()) {
+      cadena.concat((char)LoRa.read());
+    }
+   
+    for (int h = 0; h < cadena.length(); h++) {
+      if (cadena[h] != ',') {
+        prov = prov + cadena[h];
+      } else if (cadena[h] == ',') {
+        grados [contador_r] = prov;
+        prov = "";
+        contador_r ++;
+      }
+    }
+    if (grados[0] == "puto el que lo lea"){
+      Serial.println(grados[1]);
+      Serial.println(grados[2]);
+
+      servo1.write(grados[1].toInt());
+      servo2.write(grados[2].toInt());
+    }
+  }
 }
 
 void iniciar_giroscopio() {
@@ -272,7 +321,6 @@ String crear_cadena() {
   return cadenadef;
   
 }
-
 
 void enviar_por_LoRa(String cadenadef) {
   //Enviamos paquete de datos
