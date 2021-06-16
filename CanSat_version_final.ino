@@ -271,7 +271,9 @@ String datosIR() {
 
 String crear_cadena() {
   //Creamos la cadena de datos para enviar
-  String datos = datos_del_bme();
+  String datos = "ArgonSat";
+  datos += ",";
+  datos += datos_del_bme();
   datos += ",";
   datos += datosUV();
   datos += ",";
@@ -283,8 +285,7 @@ String crear_cadena() {
   datos += ",";
   datos += control_bateria();
   datos += ",";
-  
-  //datos += datosIR();
+  // datos += datosIR();
   Serial.println(datos);
 
   //Ciframos los datos
