@@ -15,10 +15,6 @@
 #include <AES.h>
 #include <Servo.h>
 
-#ifdef __AVR__
-#include <avr/power.h>
-#endif
-
 static const int servoPin = 2; //  works with TTGO
 static const int servoPin2 = 23; // works with TTGO
 
@@ -79,6 +75,12 @@ Adafruit_CCS811 ccs;
 //Activar el sensor UV
 ML8511 sensorUV(ANALOGPIN, ENABLEPIN);
 
+//Control de la batería
+int sensorPin = A5;
+float sensorValue;
+float voltajePila;
+float porcentaje;
+
 void setup() {
   Serial.begin(115200);
   Serial.println("hola");
@@ -113,8 +115,21 @@ void setup() {
 }
 
 void loop() {
+   // read data from the GPS in the 'main loop'
+  char c = GPS.read();
+  // if you want to debug, this is a good time to do it!
+  if (GPSECHO)
+    if (c) Serial.print(c);
+  // if a sentence is received, we can check the checksum, parse it...
+  if (GPS.newNMEAreceived()) {
+    // a tricky thing here is if we print the NMEA sentence, or data
+    // we end up not listening and catching other sentences!
+    // so be very wary if using OUTPUT_ALLDATA and trying to print out data
+    Serial.print(GPS.lastNMEA()); // this also sets the newNMEAreceived() flag to false
+    if (!GPS.parse(GPS.lastNMEA())) // this also sets the newNMEAreceived() flag to false
+      return; // we can fail to parse a sentence in which case we should just wait for another
+  }
   if (millis() - lastSendTime > interval) {
-    configurar_GPS();
     String datos_del_CanSat = crear_cadena();
     enviar_por_LoRa(datos_del_CanSat);
     lastSendTime = millis();
@@ -186,8 +201,9 @@ String datos_del_bme() {
 }
 
 String datos_del_GPS() {
-  float latitud = GPS.lat;
-  float longitud = GPS.lon;
+  if (GPS.fix) {
+  float latitud = GPS.latitude;
+  float longitud = GPS.longitude;
   float velocidad = GPS.speed;
   float altitud = GPS.altitude;
   String valores_GPS = String(latitud);
@@ -198,6 +214,7 @@ String datos_del_GPS() {
   valores_GPS += ",";
   valores_GPS += String(altitud);
   return valores_GPS;
+  }
 }
 
 
@@ -245,23 +262,12 @@ String datosUV() {
   return strduv;
 }
 
+
 String datosIR() {
   double Cir = mlx.readObjectTempC();
   String strCir = String(Cir);
   return strCir;
 }
-
-void configurar_GPS() {
-  char c = GPS.read();
-  if (GPSECHO)
-    if (c) Serial.print(c);
-  if (GPS.newNMEAreceived()) {
-    Serial.print(GPS.lastNMEA());
-    if (!GPS.parse(GPS.lastNMEA()))
-      return;
-  }
-}
-
 
 String crear_cadena() {
   //Creamos la cadena de datos para enviar
@@ -275,11 +281,13 @@ String crear_cadena() {
   datos += ",";
   datos += datos_del_giroscopio();
   datos += ",";
+  datos += control_bateria();
+  datos += ",";
+  
   //datos += datosIR();
   Serial.println(datos);
 
   //Ciframos los datos
-
   const char *plain_ptr = datos.c_str();
   int plainLength = datos.length();
   int padedLength = plainLength + N_BLOCK - plainLength % N_BLOCK;
@@ -294,12 +302,15 @@ String crear_cadena() {
   {
     iv_cambia += iv[i];
   }
+
+  
   //cadenadef = iv_cambia;
   cadenadef = String((char *)cipher);
   Serial.println(cadenadef);
   return cadenadef;
 
 }
+
 
 void enviar_por_LoRa(String cadenadef) {
   //Enviamos paquete de datos
@@ -310,6 +321,7 @@ void enviar_por_LoRa(String cadenadef) {
   LoRa.endPacket();
   contador += 1;
 }
+
 
 void onReceive(int packetSize) {
   if (packetSize == 0) return;
@@ -339,6 +351,8 @@ void onReceive(int packetSize) {
     servo2.write(grados[2].toInt());
   }
 }
+
+
 void control_vuelo() {
 
   if (!LoRa.begin(868E6)) {
@@ -372,4 +386,21 @@ void control_vuelo() {
       servo2.write(grados[2].toInt());
     }
   }
+}
+
+
+float control_bateria() {
+  // read the value from the sensor:
+  sensorValue = analogRead(sensorPin);
+  voltajePila = (5.00/1023.00)*sensorValue;
+  porcentaje = (100.00 * voltajePila) / 4.40;
+
+  Serial.print("Valor leido en el pin: ");
+  Serial.println(sensorValue);
+  Serial.print("Voltaje de la batería: ");
+  Serial.println(voltajePila);
+  Serial.print("% de batería: ");
+  Serial.println(porcentaje);
+
+  return porcentaje;
 }
