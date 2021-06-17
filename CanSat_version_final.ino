@@ -21,6 +21,8 @@ static const int servoPin2 = 23; // works with TTGO
 Servo servo1;
 Servo servo2;
 
+static const int pin = 13;
+
 //Definimos los pines del modulo LoRa
 #define SCK 5
 #define MISO 19
@@ -83,7 +85,6 @@ float porcentaje;
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("hola");
   Wire.begin();
   mlx.begin();
   if (!bme.begin()) {
@@ -135,9 +136,9 @@ void loop() {
     String datos_del_CanSat = crear_cadena();
     enviar_por_LoRa(datos_del_CanSat);
     
-    digitalWrite(pin, HIGH);
+    /*digitalWrite(pin, HIGH);
     delay(500);
-    digitalWrite(pin, LOW);
+    digitalWrite(pin, LOW);*/
 
     lastSendTime = millis();
     interval = random(2000) + 1000;
