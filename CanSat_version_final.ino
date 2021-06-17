@@ -16,8 +16,8 @@
 #include <Servo.h>
 
 //Declaramos pines de los servos y servos
-static const int servoPin = 2;  
-static const int servoPin2 = 23; 
+static const int servoPin = 2;
+static const int servoPin2 = 23;
 
 Servo servo1;
 Servo servo2;
@@ -48,7 +48,7 @@ Adafruit_GPS GPS(&GPSSerial);
 
 #define GPSECHO false
 
-//Variables 
+//Variables
 String cadena;
 String prov;
 String grados[3];
@@ -111,13 +111,13 @@ void setup() {
   iniciar_magnetometro();
   iniciar_barometro();
   iniciarLora();
-  
+
   //Activamos los servos
   servo1.attach(servoPin);
   servo2.attach(servoPin2);
 
   //Iniciamos sensor de gases
-  if (!ccs.begin()) 
+  if (!ccs.begin())
   {
     Serial.println("Failed to start sensor! Please check your wiring.");
     while (1);
@@ -127,11 +127,11 @@ void setup() {
   delay(500);
 }
 
-void loop() 
+void loop()
 {
   //Leemos los datos del GPS
   char c = GPS.read();
-  
+
   if (GPSECHO)
     if (c) Serial.print(c);
   if (GPS.newNMEAreceived()) //Comprobamos si recibimos datos
@@ -147,18 +147,18 @@ void loop()
 
     //Pitar el zumbador
     /*digitalWrite(pin, HIGH);
-    delay(500);
-    digitalWrite(pin, LOW);*/
-    
+      delay(500);
+      digitalWrite(pin, LOW);*/
+
     lastSendTime = millis();
     interval = random(2000) + 1000;
   }
-  
+
   onReceive(LoRa.parsePacket()); //Funcion para recibir datos de los servos por lora
 }
 
 
-void iniciar_giroscopio() 
+void iniciar_giroscopio()
 {
   if (!ag.init()) {
     Serial.println("Error al iniciar el giroscopio!");
@@ -178,7 +178,7 @@ void iniciar_magnetometro()
 }
 
 
-void iniciar_barometro() 
+void iniciar_barometro()
 {
   if (!pta.init()) {
     Serial.println("Error al iniciar el sensor de presion!");
@@ -188,7 +188,7 @@ void iniciar_barometro()
 }
 
 
-void iniciarLora() 
+void iniciarLora()
 {
   //Pines SPI de LoRa
   SPI.begin(SCK, MISO, MOSI, SS);
@@ -205,7 +205,7 @@ void iniciarLora()
 }
 
 
-String datos_del_bme() 
+String datos_del_bme()
 {
   //Leer los valores del bme
   float temperatura_bme = bme.readTemperature();
@@ -222,7 +222,7 @@ String datos_del_bme()
   return valores_bme;
 }
 
-String datos_del_GPS() 
+String datos_del_GPS()
 {
   if (GPS.fix) {
     float latitud = GPS.latitude;
@@ -240,7 +240,7 @@ String datos_del_GPS()
   }
 }
 
-String datos_del_giroscopio() 
+String datos_del_giroscopio()
 {
   ag.read();
   mag.read();
@@ -264,7 +264,7 @@ String datos_del_giroscopio()
   return reporte;
 }
 
-String datosDelAire() 
+String datosDelAire()
 {
   if (ccs.available()) {
     if (!ccs.readData()) {
@@ -278,7 +278,7 @@ String datosDelAire()
   }
 }
 
-String datosUV() 
+String datosUV()
 {
   float UV = sensorUV.getUV();
   float duv = UV * .1;
@@ -286,14 +286,14 @@ String datosUV()
   return strduv;
 }
 
-String datosIR() 
+String datosIR()
 {
   double Cir = mlx.readObjectTempC();
   String strCir = String(Cir);
   return strCir;
 }
 
-String crear_cadena() 
+String crear_cadena()
 {
   //Creamos la cadena de datos para enviar
   String datos = "ArgonSat";
@@ -336,7 +336,7 @@ String crear_cadena()
 }
 
 
-void enviar_por_LoRa(String cadenadef) 
+void enviar_por_LoRa(String cadenadef)
 {
   //Enviamos paquete de datos
   Serial.print("Enviando paquete...");
@@ -348,20 +348,20 @@ void enviar_por_LoRa(String cadenadef)
 }
 
 
-void onReceive(int packetSize) 
+void onReceive(int packetSize)
 {
   if (packetSize == 0) return;
 
   contador_r = 0;
   cadena = "";
 
-  while (LoRa.available()) 
+  while (LoRa.available())
   {
     cadena.concat((char)LoRa.read());
   }
- 
+
   Serial.println("recibe" + cadena);
-  for (int h = 0; h < cadena.length(); h++) 
+  for (int h = 0; h < cadena.length(); h++)
   {
     if (cadena[h] != ',') {
       prov = prov + cadena[h];
@@ -371,7 +371,7 @@ void onReceive(int packetSize)
       contador_r ++;
     }
   }
-  if (grados[0] == "Servo") 
+  if (grados[0] == "Servo")
   {
     Serial.println(grados[1]);
     Serial.println(grados[2]);
