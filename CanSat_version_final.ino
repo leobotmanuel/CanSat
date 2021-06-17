@@ -97,6 +97,8 @@ void setup() {
   delay(1000);
   GPSSerial.println(PMTK_Q_RELEASE);
 
+  pinMode(pin, OUTPUT);
+
   iniciar_giroscopio();
   iniciar_magnetometro();
   iniciar_barometro();
@@ -115,7 +117,7 @@ void setup() {
 }
 
 void loop() {
-   // read data from the GPS in the 'main loop'
+  // read data from the GPS in the 'main loop'
   char c = GPS.read();
   // if you want to debug, this is a good time to do it!
   if (GPSECHO)
@@ -132,6 +134,11 @@ void loop() {
   if (millis() - lastSendTime > interval) {
     String datos_del_CanSat = crear_cadena();
     enviar_por_LoRa(datos_del_CanSat);
+    
+    digitalWrite(pin, HIGH);
+    delay(500);
+    digitalWrite(pin, LOW);
+
     lastSendTime = millis();
     interval = random(2000) + 1000;
   }
@@ -202,18 +209,18 @@ String datos_del_bme() {
 
 String datos_del_GPS() {
   if (GPS.fix) {
-  float latitud = GPS.latitude;
-  float longitud = GPS.longitude;
-  float velocidad = GPS.speed;
-  float altitud = GPS.altitude;
-  String valores_GPS = String(latitud);
-  valores_GPS += ",";
-  valores_GPS += String(longitud);
-  valores_GPS += ",";
-  valores_GPS += String(velocidad);
-  valores_GPS += ",";
-  valores_GPS += String(altitud);
-  return valores_GPS;
+    float latitud = GPS.latitude;
+    float longitud = GPS.longitude;
+    float velocidad = GPS.speed;
+    float altitud = GPS.altitude;
+    String valores_GPS = String(latitud);
+    valores_GPS += ",";
+    valores_GPS += String(longitud);
+    valores_GPS += ",";
+    valores_GPS += String(velocidad);
+    valores_GPS += ",";
+    valores_GPS += String(altitud);
+    return valores_GPS;
   }
 }
 
@@ -304,7 +311,7 @@ String crear_cadena() {
     iv_cambia += iv[i];
   }
 
-  
+
   //cadenadef = iv_cambia;
   cadenadef = String((char *)cipher);
   Serial.println(cadenadef);
@@ -393,7 +400,7 @@ void control_vuelo() {
 float control_bateria() {
   // read the value from the sensor:
   sensorValue = analogRead(sensorPin);
-  voltajePila = (5.00/1023.00)*sensorValue;
+  voltajePila = (5.00 / 1023.00) * sensorValue;
   porcentaje = (100.00 * voltajePila) / 4.40;
 
   Serial.print("Valor leido en el pin: ");
