@@ -15,12 +15,14 @@
 #include <AES.h>
 #include <Servo.h>
 
-static const int servoPin = 2; //  works with TTGO
-static const int servoPin2 = 23; // works with TTGO
+//Declaramos pines de los servos y servos
+static const int servoPin = 2;  
+static const int servoPin2 = 23; 
 
 Servo servo1;
 Servo servo2;
 
+//Declaramos pin del zumbador
 static const int pin = 13;
 
 //Definimos los pines del modulo LoRa
@@ -46,22 +48,23 @@ Adafruit_GPS GPS(&GPSSerial);
 
 #define GPSECHO false
 
-//Contador de paquetes LoRa
+//Variables 
 String cadena;
 String prov;
 String grados[3];
 int contador_r = 0;
 int contador = 0;
-
 long lastSendTime = 0;
 int interval = 2000;
 
+//Nombrar sensores
 LSM6 ag;
 LIS3MDL mag;
 LPS pta;
 Adafruit_MLX90614 mlx = Adafruit_MLX90614();
 AES aes;
 
+//Variables de cifrado
 byte *key = (unsigned char*)"0123456789010123";
 int my_iv = 36753562;
 
@@ -84,13 +87,16 @@ float voltajePila;
 float porcentaje;
 
 void setup() {
-  Serial.begin(115200);
-  Wire.begin();
-  mlx.begin();
-  if (!bme.begin()) {
+  Serial.begin(115200); //Activamos el serial
+  Wire.begin();  //Activamos el I2C
+  mlx.begin();  //Activamos el sensor de infrarrojos
+  if (!bme.begin()) //Activamos el BME_280
+  {
     Serial.println(F("No se ha encontrado el sensor BME280"));
     while (1) delay(10);
   }
+
+  //Activamos el GPS
   GPS.begin(9600);
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
@@ -98,17 +104,21 @@ void setup() {
   delay(1000);
   GPSSerial.println(PMTK_Q_RELEASE);
 
-  pinMode(pin, OUTPUT);
+  pinMode(pin, OUTPUT);  //Activamos el pin del zumbador
 
+  //Iniciamos los sensores y lora
   iniciar_giroscopio();
   iniciar_magnetometro();
   iniciar_barometro();
   iniciarLora();
-
+  
+  //Activamos los servos
   servo1.attach(servoPin);
   servo2.attach(servoPin2);
 
-  if (!ccs.begin()) {
+  //Iniciamos sensor de gases
+  if (!ccs.begin()) 
+  {
     Serial.println("Failed to start sensor! Please check your wiring.");
     while (1);
   }
@@ -117,35 +127,34 @@ void setup() {
   delay(500);
 }
 
-void loop() {
-  // read data from the GPS in the 'main loop'
+void loop() 
+{
+  // leemos los datos del GPS
   char c = GPS.read();
-  // if you want to debug, this is a good time to do it!
+  
   if (GPSECHO)
     if (c) Serial.print(c);
-  // if a sentence is received, we can check the checksum, parse it...
-  if (GPS.newNMEAreceived()) {
-    // a tricky thing here is if we print the NMEA sentence, or data
-    // we end up not listening and catching other sentences!
-    // so be very wary if using OUTPUT_ALLDATA and trying to print out data
-    Serial.print(GPS.lastNMEA()); // this also sets the newNMEAreceived() flag to false
-    if (!GPS.parse(GPS.lastNMEA())) // this also sets the newNMEAreceived() flag to false
-      return; // we can fail to parse a sentence in which case we should just wait for another
+  if (GPS.newNMEAreceived()) //Comprobamos si recibimos datos
+  {
+    Serial.print(GPS.lastNMEA());
+    if (!GPS.parse(GPS.lastNMEA()))
+      return;
   }
-  if (millis() - lastSendTime > interval) {
+  if (millis() - lastSendTime > interval) //Mandar datos cada segundo
+  {
     String datos_del_CanSat = crear_cadena();
     enviar_por_LoRa(datos_del_CanSat);
-    
+
+    //Pitar el zumbador
     /*digitalWrite(pin, HIGH);
     delay(500);
     digitalWrite(pin, LOW);*/
-
+    
     lastSendTime = millis();
     interval = random(2000) + 1000;
   }
-
-  onReceive(LoRa.parsePacket());
-
+  
+  onReceive(LoRa.parsePacket()); //Funcion para reci
 }
 
 
