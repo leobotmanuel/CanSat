@@ -129,7 +129,7 @@ void setup() {
 
 void loop() 
 {
-  // leemos los datos del GPS
+  //Leemos los datos del GPS
   char c = GPS.read();
   
   if (GPSECHO)
@@ -154,12 +154,12 @@ void loop()
     interval = random(2000) + 1000;
   }
   
-  onReceive(LoRa.parsePacket()); //Funcion para reci
+  onReceive(LoRa.parsePacket()); //Funcion para recibir datos de los servos por lora
 }
 
 
-
-void iniciar_giroscopio() {
+void iniciar_giroscopio() 
+{
   if (!ag.init()) {
     Serial.println("Error al iniciar el giroscopio!");
     while (1);
@@ -168,7 +168,8 @@ void iniciar_giroscopio() {
 }
 
 
-void iniciar_magnetometro() {
+void iniciar_magnetometro()
+{
   if (!mag.init()) {
     Serial.println("Error al iniciar el magnetometro!");
     while (1);
@@ -176,7 +177,9 @@ void iniciar_magnetometro() {
   mag.enableDefault();
 }
 
-void iniciar_barometro() {
+
+void iniciar_barometro() 
+{
   if (!pta.init()) {
     Serial.println("Error al iniciar el sensor de presion!");
     while (1);
@@ -185,7 +188,8 @@ void iniciar_barometro() {
 }
 
 
-void iniciarLora() {
+void iniciarLora() 
+{
   //Pines SPI de LoRa
   SPI.begin(SCK, MISO, MOSI, SS);
   //Pines LoRa
@@ -201,7 +205,8 @@ void iniciarLora() {
 }
 
 
-String datos_del_bme() {
+String datos_del_bme() 
+{
   //Leer los valores del bme
   float temperatura_bme = bme.readTemperature();
   float presion_bme = bme.readPressure();
@@ -217,7 +222,8 @@ String datos_del_bme() {
   return valores_bme;
 }
 
-String datos_del_GPS() {
+String datos_del_GPS() 
+{
   if (GPS.fix) {
     float latitud = GPS.latitude;
     float longitud = GPS.longitude;
@@ -234,8 +240,8 @@ String datos_del_GPS() {
   }
 }
 
-
-String datos_del_giroscopio() {
+String datos_del_giroscopio() 
+{
   ag.read();
   mag.read();
   presion_giroscopio = pta.readPressureMillibars();
@@ -258,7 +264,8 @@ String datos_del_giroscopio() {
   return reporte;
 }
 
-String datosDelAire() {
+String datosDelAire() 
+{
   if (ccs.available()) {
     if (!ccs.readData()) {
       float co = ccs.geteCO2();
@@ -271,22 +278,23 @@ String datosDelAire() {
   }
 }
 
-
-String datosUV() {
+String datosUV() 
+{
   float UV = sensorUV.getUV();
   float duv = UV * .1;
   String strduv = String(duv);
   return strduv;
 }
 
-
-String datosIR() {
+String datosIR() 
+{
   double Cir = mlx.readObjectTempC();
   String strCir = String(Cir);
   return strCir;
 }
 
-String crear_cadena() {
+String crear_cadena() 
+{
   //Creamos la cadena de datos para enviar
   String datos = "ArgonSat";
   datos += ",";
@@ -321,16 +329,15 @@ String crear_cadena() {
     iv_cambia += iv[i];
   }
 
-
   //cadenadef = iv_cambia;
   cadenadef = String((char *)cipher);
   Serial.println(cadenadef);
   return cadenadef;
-
 }
 
 
-void enviar_por_LoRa(String cadenadef) {
+void enviar_por_LoRa(String cadenadef) 
+{
   //Enviamos paquete de datos
   Serial.print("Enviando paquete...");
   Serial.println(contador);
@@ -341,18 +348,21 @@ void enviar_por_LoRa(String cadenadef) {
 }
 
 
-void onReceive(int packetSize) {
+void onReceive(int packetSize) 
+{
   if (packetSize == 0) return;
 
   contador_r = 0;
   cadena = "";
 
-  while (LoRa.available()) {
+  while (LoRa.available()) 
+  {
     cadena.concat((char)LoRa.read());
-
   }
+ 
   Serial.println("recibe" + cadena);
-  for (int h = 0; h < cadena.length(); h++) {
+  for (int h = 0; h < cadena.length(); h++) 
+  {
     if (cadena[h] != ',') {
       prov = prov + cadena[h];
     } else if (cadena[h] == ',') {
@@ -361,7 +371,8 @@ void onReceive(int packetSize) {
       contador_r ++;
     }
   }
-  if (grados[0] == "puto el que lo lea") {
+  if (grados[0] == "Servo") 
+  {
     Serial.println(grados[1]);
     Serial.println(grados[2]);
 
@@ -370,45 +381,8 @@ void onReceive(int packetSize) {
   }
 }
 
-
-void control_vuelo() {
-
-  if (!LoRa.begin(868E6)) {
-    Serial.println("Starting LoRa failed!");
-    while (1);
-  }
-  contador_r = 0;
-  cadena = "";
-
-  int cualquiermierda = LoRa.parsePacket();
-  if (cualquiermierda) {
-    Serial.println("loquesea");
-    while (LoRa.available()) {
-      cadena.concat((char)LoRa.read());
-    }
-
-    for (int h = 0; h < cadena.length(); h++) {
-      if (cadena[h] != ',') {
-        prov = prov + cadena[h];
-      } else if (cadena[h] == ',') {
-        grados [contador_r] = prov;
-        prov = "";
-        contador_r ++;
-      }
-    }
-    if (grados[0] == "puto el que lo lea") {
-      Serial.println(grados[1]);
-      Serial.println(grados[2]);
-
-      servo1.write(grados[1].toInt());
-      servo2.write(grados[2].toInt());
-    }
-  }
-}
-
-
-float control_bateria() {
-  // read the value from the sensor:
+float control_bateria()
+{
   sensorValue = analogRead(sensorPin);
   voltajePila = (5.00 / 1023.00) * sensorValue;
   porcentaje = (100.00 * voltajePila) / 4.40;
