@@ -17,6 +17,7 @@
 
 static const int servoPin = 2; //  works with TTGO
 static const int servoPin2 = 23; // works with TTGO
+static const int led1 = 12;
 
 Servo servo1;
 Servo servo2;
@@ -83,6 +84,8 @@ float porcentaje;
 
 void setup() {
   Serial.begin(115200);
+  
+  pinMode(led1, OUTPUT);
   //Serial.println("hola");
   Wire.begin();
   mlx.begin();
@@ -129,9 +132,11 @@ void loop() {
     if (!GPS.parse(GPS.lastNMEA())) // this also sets the newNMEAreceived() flag to false
       return; // we can fail to parse a sentence in which case we should just wait for another
   }
+  digitalWrite(led1, LOW);
   if (millis() - lastSendTime > interval) {
     String datos_del_CanSat = crear_cadena();
     enviar_por_LoRa(datos_del_CanSat);
+    digitalWrite(led1, HIGH);
     lastSendTime = millis();
     interval = random(2000) + 1000;
   }
