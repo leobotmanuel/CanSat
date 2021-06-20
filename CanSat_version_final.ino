@@ -347,8 +347,8 @@ void onReceive(int packetSize) {
   }
   if (grados[0] == "cva") {
 
-    servo1.write(grados[1].toInt());
-    servo2.write(grados[2].toInt());
+    servo1.write((-1)*grados[1].toInt());
+    servo2.write((-1)*grados[2].toInt());
   }
 }
 
