@@ -144,7 +144,11 @@ void loop() {
 
     // Encendemos el LED y el zumbador
     digitalWrite(led, HIGH);
+    delay(100);
+    digitalWrite(led, LOW);
     digitalWrite(zumbador, HIGH);
+    delay(100);
+    digitalWrite(zumbador, LOW);
     lastSendTime = millis();
     interval = random(2000) + 1000;
   }
@@ -268,7 +272,7 @@ String datosUV() {
 }
 
 String datosIR() {
-  double Cir = mlx.readObjectTempC();
+  float Cir = mlx.readObjectTempC();
   String strCir = String(Cir);
   return strCir;
 }
