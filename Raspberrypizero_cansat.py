@@ -17,7 +17,7 @@ ser = serial.Serial(
 )
 
 with open("/home/pi/datos_cansat_argonautex.csv", "a") as log:
-	log.write("palabra_clave,temperatura_bme,presion_bme,humedad_bme,altitud_bme,duv,latitud,longitud,velocidad,altitud_gps,co2,gases_volatiles,acx,acy,acz,girox,giroy,giroz,magx,magy,magz,IR")
+	log.write("clave,temperaturaBME,presionBME,humedadBME,altitudBME,DUV,CO2,GasesVolatiles,AcelerometroX,AcelerometroY,AcelerometroZ,GiroscopioX,GiroscopioY,GiroscopioZ,MagnetometroX,MagnetometroY,MagnetometroZ,presAlt, tempAlt, altAlt,bateria,IR,LatitudGPS,LongitudGPS,velocidadGPS,altitudGPS")
 	log.close()
 
 while True:
