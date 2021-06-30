@@ -98,6 +98,7 @@ void setup() {
   // Iniciamos los sensores y LoRa
   Wire.begin();
   mlx.begin();
+  sensorUV.enable();
   if (!bme.begin()) {
     while (1) delay(10);
   }
@@ -268,8 +269,8 @@ String datosDelAire() {
 
 String datosUV() {
   float UV = sensorUV.getUV();
-  float duv = UV * .1;
-  String strduv = String(duv);
+  float DUV = light.estimateDUVindex(UV);
+  String strduv = String(DUV);
   return strduv;
 }
 
