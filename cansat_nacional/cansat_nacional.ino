@@ -82,7 +82,7 @@ Adafruit_CCS811 ccs;
 ML8511 sensorUV(ANALOGPIN, ENABLEPIN);
 
 // Control de la batería
-int sensorPin = 36;
+int sensorPin = 37;
 float sensorValue;
 float voltajePila;
 float porcentaje;
