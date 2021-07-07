@@ -5,7 +5,7 @@
 #include <LSM6.h>
 #include <LIS3MDL.h>
 #include <LPS.h>
-#include <Adafruit_Sensor.h>
+//#include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 #include <math.h>
 #include "Adafruit_CCS811.h"
@@ -269,7 +269,7 @@ String datosDelAire() {
 
 String datosUV() {
   float UV = sensorUV.getUV();
-  float DUV = light.estimateDUVindex(UV);
+  float DUV = sensorUV.estimateDUVindex(UV);
   String strduv = String(DUV);
   return strduv;
 }
