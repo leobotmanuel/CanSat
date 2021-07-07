@@ -12,7 +12,7 @@
 #include <ML8511.h>
 #include <Adafruit_GPS.h>
 #include <Adafruit_MLX90614.h>
-//#include <AES.h>
+#include <SpritzCipher.h>
 #include <Servo.h>
 
 // Pines para los servos, el LED y el zumbador
@@ -63,11 +63,11 @@ LSM6 ag;
 LIS3MDL mag;
 LPS pta;
 Adafruit_MLX90614 mlx = Adafruit_MLX90614();
-//AES aes;
 
 // Creamos la clave del cifrado
-//byte *key = (unsigned char*)"0123456789010123";
-//int my_iv = 36753562;
+spritz_ctx s_ctx;
+byte clave[3] = { 0x00, 0x01, 0x02 };
+byte msg[333];
 
 //Variables para almanecer los datos del giroscopio(presion, temperatura y altura)
 float presion_giroscopio;
@@ -270,7 +270,7 @@ String datosDelAire() {
 String datosUV() {
   float UV = sensorUV.getUV();
   float DUV = sensorUV.estimateDUVindex(UV);
-  String strduv = String(DUV);
+  String strduv = String(DUV/10);
   return strduv;
 }
 
@@ -298,28 +298,23 @@ String crear_cadena() {
   datos += datos_del_GPS();
   datos += ",";
   Serial.println(datos);
-  return datos;
+  
   //Ciframos los datos
-
+  datos.getBytes(msg, 333);
+  String datos_cifrados = String(cifrar_datos(msg, sizeof(msg), clave, sizeof(clave)));
+  Serial.println(datos_cifrados);
 /*
-  const char *plain_ptr = datos.c_str();
-  int plainLength = datos.length();
-  int padedLength = plainLength + N_BLOCK - plainLength % N_BLOCK;
-  byte iv [N_BLOCK] ;
-  byte cipher [padedLength] ;
-  String cadenadef;
-  String iv_cambia;
-  aes.set_IV(my_iv);
-  aes.get_IV(iv);
-  aes.do_aes_encrypt((unsigned char*)plain_ptr, plainLength, cipher, key, 128, iv);
-  for (int i = 0; i < 16; i++)
-  {
-    iv_cambia += iv[i];
-  }
+  byte datos_cifradosb[333];
 
-  cadenadef = String((char *)cipher);
-  return cadenadef;
+  datos_cifrados.getBytes(datos_cifradosb, 333);
+  
+  spritz_setup(&s_ctx, clave, sizeof(clave));
+  spritz_crypt(&s_ctx, datos_cifradosb, sizeof(msg), datos_cifradosb);
+  datos_cifrados = String(*datos_cifradosb);
+
+  Serial.println(datos_cifrados);
   */
+  return datos_cifrados;
 }
 
 
@@ -362,4 +357,15 @@ float control_bateria() {
   voltajePila = (4.36 / 1250.00) * sensorValue;
   porcentaje = (100.00 * voltajePila) / 4.36;
   return porcentaje;
+}
+
+byte cifrar_datos(byte *msg, byte msgLen, byte *key, byte keyLen)
+{
+  byte buf[333];
+  unsigned int i;
+
+  spritz_setup(&s_ctx, key, keyLen);
+  spritz_crypt(&s_ctx, msg, msgLen, buf);
+
+  return *buf;
 }
