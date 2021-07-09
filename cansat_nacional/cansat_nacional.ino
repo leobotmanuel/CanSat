@@ -64,10 +64,8 @@ LIS3MDL mag;
 LPS pta;
 Adafruit_MLX90614 mlx = Adafruit_MLX90614();
 
-// Creamos la clave del cifrado
-spritz_ctx s_ctx;
-byte clave[3] = { 0x00, 0x01, 0x02 };
-byte msg[333];
+//Declaramos la clave de cifrado
+const char testKey[3] = { 0x00, 0x01, 0x02 };
 
 //Variables para almanecer los datos del giroscopio(presion, temperatura y altura)
 float presion_giroscopio;
@@ -270,7 +268,7 @@ String datosDelAire() {
 String datosUV() {
   float UV = sensorUV.getUV();
   float DUV = sensorUV.estimateDUVindex(UV);
-  String strduv = String(DUV/10);
+  String strduv = String(DUV / 10);
   return strduv;
 }
 
@@ -298,23 +296,40 @@ String crear_cadena() {
   datos += datos_del_GPS();
   datos += ",";
   Serial.println(datos);
-  
+
   //Ciframos los datos
-  datos.getBytes(msg, 333);
-  String datos_cifrados = String(cifrar_datos(msg, sizeof(msg), clave, sizeof(clave)));
-  Serial.println(datos_cifrados);
-/*
-  byte datos_cifradosb[333];
 
-  datos_cifrados.getBytes(datos_cifradosb, 333);
+  //Declaramos la string de los datos cifrados que enviaremos por LoRa
+  String datos_cif;
   
-  spritz_setup(&s_ctx, clave, sizeof(clave));
-  spritz_crypt(&s_ctx, datos_cifradosb, sizeof(msg), datos_cifradosb);
-  datos_cifrados = String(*datos_cifradosb);
+  //Declaramos el tamaño de la cadena de datos del cansat
+  int leng = datos.length() + 1;
 
-  Serial.println(datos_cifrados);
-  */
-  return datos_cifrados;
+  //Declaramos el buffer donde se guardaran los datos para cifar
+  char testMsg[leng];
+
+  // Pasamos la string de datos a bytes y lo guardamos en el buffer
+  datos.toCharArray(testMsg, leng);
+
+  //Llamamos a la funcion que va a cifrar/descifrar los datos
+  spritz_ctx s_ctx;
+
+  //Declaramos el output buffer de cifrado
+  char buf[150];
+  unsigned int i;
+
+  //Ciframos los datos del cansat
+  spritz_setup(&s_ctx, testKey, sizeof(testKey));
+  spritz_crypt(&s_ctx, testMsg, sizeof(testMsg), buf);
+
+  for (i = 0; i < sizeof(testMsg); i++) {
+    datos_cif += String(buf[i]);
+  }
+  Serial.print("cadena cifrada: ");
+  Serial.println(datos_cif);
+  
+  //Retornamos la cadena de datos cifrada para enviar por LoRa
+  return datos_cif;
 }
 
 
@@ -357,15 +372,4 @@ float control_bateria() {
   voltajePila = (4.36 / 1250.00) * sensorValue;
   porcentaje = (100.00 * voltajePila) / 4.36;
   return porcentaje;
-}
-
-byte cifrar_datos(byte *msg, byte msgLen, byte *key, byte keyLen)
-{
-  byte buf[333];
-  unsigned int i;
-
-  spritz_setup(&s_ctx, key, keyLen);
-  spritz_crypt(&s_ctx, msg, msgLen, buf);
-
-  return *buf;
 }
