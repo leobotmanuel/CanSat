@@ -12,8 +12,8 @@
 #include <ML8511.h>
 #include <Adafruit_GPS.h>
 #include <Adafruit_MLX90614.h>
-#include <SpritzCipher.h>
 #include <Servo.h>
+#include <xxtea-lib.h>
 
 // Pines para los servos, el LED y el zumbador
 static const int servoPin = 2;
@@ -65,7 +65,7 @@ LPS pta;
 Adafruit_MLX90614 mlx = Adafruit_MLX90614();
 
 //Declaramos la clave de cifrado
-const char testKey[3] = { 0x00, 0x01, 0x02 };
+
 
 //Variables para almanecer los datos del giroscopio(presion, temperatura y altura)
 float presion_giroscopio;
@@ -88,6 +88,9 @@ float porcentaje;
 void setup() {
   // Iniciamos el Serial a 115200 baudios
   Serial.begin(115200);
+
+  //Declaramos la clave de cifrado
+  xxtea.setKey("argonautex");
 
   // Declaramos los pines del LED y del zumbador como pines de salida
   pinMode(led, OUTPUT);
@@ -298,37 +301,7 @@ String crear_cadena() {
   Serial.println(datos);
 
   //Ciframos los datos
-
-  //Declaramos la string de los datos cifrados que enviaremos por LoRa
-  String datos_cif;
-  
-  //Declaramos el tamaño de la cadena de datos del cansat
-  int leng = datos.length() + 1;
-
-  //Declaramos el buffer donde se guardaran los datos para cifar
-  char testMsg[leng];
-
-  // Pasamos la string de datos a bytes y lo guardamos en el buffer
-  datos.toCharArray(testMsg, leng);
-
-  //Llamamos a la funcion que va a cifrar/descifrar los datos
-  spritz_ctx s_ctx;
-
-  //Declaramos el output buffer de cifrado
-  char buf[150];
-  unsigned int i;
-
-  //Ciframos los datos del cansat
-  spritz_setup(&s_ctx, testKey, sizeof(testKey));
-  spritz_crypt(&s_ctx, testMsg, sizeof(testMsg), buf);
-
-  for (i = 0; i < sizeof(testMsg); i++) {
-    datos_cif += String(buf[i]);
-  }
-  Serial.print("cadena cifrada: ");
-  Serial.println(datos_cif);
-  
-  //Retornamos la cadena de datos cifrada para enviar por LoRa
+  String datos_cif = xxtea.encrypt(datos);
   return datos_cif;
 }
 
