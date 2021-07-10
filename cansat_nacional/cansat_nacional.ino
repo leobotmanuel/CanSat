@@ -143,8 +143,7 @@ void loop() {
   digitalWrite(zumbador, LOW);
   if (millis() - lastSendTime > interval) {
     // Enviamos los datos de los sensores a la estación
-    crear_cadena();
-    enviar_por_LoRa(datos);
+    enviar_por_LoRa(crear_cadena());
 
     // Encendemos el LED y el zumbador
     digitalWrite(led, HIGH);
