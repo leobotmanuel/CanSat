@@ -302,7 +302,7 @@ String crear_cadena() {
 
   //Ciframos los datos
   String datos_cif = cifrar(datos);
-  Serial.println(datos_cif);
+  //Serial.println(datos_cif);
   return datos_cif;
 }
 
