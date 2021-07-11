@@ -13,13 +13,15 @@
 #include <Adafruit_GPS.h>
 #include <Adafruit_MLX90614.h>
 #include <Servo.h>
-#include <xxtea-lib.h>
 
 // Pines para los servos, el LED y el zumbador
 static const int servoPin = 2;
 static const int servoPin2 = 23;
 static const int led = 12;
 static const int zumbador = 13;
+
+// Clave para el cifrado propio
+static const int clave = 43;
 
 // Creamos dos objetos para los servos
 Servo servo1;
@@ -90,7 +92,6 @@ void setup() {
   Serial.begin(115200);
 
   //Declaramos la clave de cifrado
-  xxtea.setKey("argonautex");
 
   // Declaramos los pines del LED y del zumbador como pines de salida
   pinMode(led, OUTPUT);
@@ -300,7 +301,8 @@ String crear_cadena() {
   Serial.println(datos);
 
   //Ciframos los datos
-  String datos_cif = xxtea.encrypt(datos);
+  String datos_cif = cifrar(datos);
+  Serial.println(datos_cif);
   return datos_cif;
 }
 
@@ -344,4 +346,13 @@ float control_bateria() {
   voltajePila = (4.36 / 1250.00) * sensorValue;
   porcentaje = (100.00 * voltajePila) / 4.36;
   return porcentaje;
+}
+
+String cifrar(String entrada) {
+  String salida;
+  for (int i = 0; i < entrada.length(); i++){
+    byte entrada_cifrada = (byte)entrada[i] + clave;
+    salida += (char)entrada_cifrada;
+  }
+  return salida;
 }
