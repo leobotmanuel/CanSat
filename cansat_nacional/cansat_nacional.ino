@@ -36,7 +36,7 @@ Servo servo2;
 #define DIO0 26
 
 //Definimos pines del sensor UV
-#define ANALOGPIN 36
+#define ANALOGPIN 37
 #define ENABLEPIN 19
 
 //Definimos la banda de LoRa
@@ -82,7 +82,7 @@ Adafruit_CCS811 ccs;
 ML8511 sensorUV(ANALOGPIN, ENABLEPIN);
 
 // Control de la batería
-int sensorPin = 37;
+int sensorPin = 36;
 float sensorValue;
 float voltajePila;
 float porcentaje;
@@ -343,9 +343,8 @@ void onReceive(int packetSize) {
 
 float control_bateria() {
   sensorValue = analogRead(sensorPin);
-  voltajePila = (4.36 / 1250.00) * sensorValue;
-  porcentaje = (100.00 * voltajePila) / 4.36;
-  return porcentaje;
+  voltajePila = (4.19 / 4095) * sensorValue;
+  return voltajePila;
 }
 
 String cifrar(String entrada) {
